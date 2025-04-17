@@ -1,7 +1,15 @@
+# app/routers/prescription.py
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi import (
+    APIRouter,
+    File,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.config import settings
@@ -22,7 +30,37 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@router.post("/upload", response_class=HTMLResponse)
+@router.get("/result/{uid}", response_class=HTMLResponse)
+async def result_page(request: Request, uid: str):
+    """
+    UID — имя файла .ics без расширения.  
+    Ставим заголовки no‑store/no‑cache, чтобы страница никогда не кэшировалась.
+    """
+    ics_path = Path("static/ics") / f"{uid}.ics"
+    if not ics_path.exists():
+        raise HTTPException(status_code=404, detail="ICS file not found")
+
+    ics_url = request.url_for("static", path=f"ics/{ics_path.name}")
+    ics_text = ics_path.read_text(encoding="utf-8")
+
+    qr_b64_ics_text = qr_service.generate_base64_png(ics_text)
+    qr_b64_link = qr_service.generate_base64_png(ics_url)
+
+    response = templates.TemplateResponse(
+        "result.html",
+        {
+            "request": request,
+            "ics_url": ics_url,
+            "qr_b64_ics": qr_b64_ics_text,
+            "qr_b64_link": qr_b64_link,
+        },
+    )
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    return response
+
+
+@router.post("/upload")  # <‑ убрали response_class — будет RedirectResponse
 async def upload(
     request: Request,
     prescription: UploadFile = File(
@@ -56,23 +94,12 @@ async def upload(
         raise HTTPException(status_code=500, detail=f"LLM error: {exc}") from exc
 
     # ------------------------------------------------------------------ #
-    # сохранение ICS и генерация QR
+    # сохранение ICS и редирект на результат
     # ------------------------------------------------------------------ #
     ics_path: Path = ics_service.save(ics_text)
-    ics_url = f"{settings.app_base_url.rstrip('/')}/static/ics/{ics_path.name}"
 
-    # QR‑код 1: полный текст ICS
-    qr_b64_ics_text: str = qr_service.generate_base64_png(ics_text)
-
-    # QR‑код 2: ссылка на файл ICS
-    qr_b64_link: str = qr_service.generate_base64_png(ics_url)
-
-    return templates.TemplateResponse(
-        "result.html",
-        {
-            "request": request,
-            "ics_url": ics_url,
-            "qr_b64_ics": qr_b64_ics_text,
-            "qr_b64_link": qr_b64_link,
-        },
+    # POST‑Redirect‑GET: абсолютная ссылка гарантирует правильный переход
+    return RedirectResponse(
+        url=request.url_for("result_page", uid=ics_path.stem),
+        status_code=status.HTTP_303_SEE_OTHER,
     )
