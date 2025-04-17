@@ -3,24 +3,63 @@
 <head>
   <meta charset="utf-8">
   <title>MedRem — результат</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.4; }
-    img       { max-width: 320px; height: auto; }
-    .qr-big   { max-width: 640px; }     /* ‑‑ новый класс для большого QR */
+    :root {
+      --gap: 1.5rem;
+      --radius: .75rem;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      line-height: 1.45;
+      padding: var(--gap);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { margin-bottom: var(--gap); text-align: center; font-size: 1.5rem; }
+    h2 { margin: var(--gap) 0 .75rem; font-size: 1.2rem; }
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius);
+      box-shadow: 0 2px 6px rgb(0 0 0 / .12);
+    }
+    /* первый, "большой" QR‑код */
+    .qr-big {
+      max-width: 640px;          /* десктоп */
+      width: 90vw;               /* мобильные устройства */
+    }
+    /* второй, "маленький" QR‑код */
+    .qr-small {
+      max-width: 320px;
+      width: 75vw;
+    }
+    a.download {
+      margin-top: var(--gap);
+      padding: .75rem 1rem;
+      background: #2965ff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: var(--radius);
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
-  <h1>Готово 🎉</h1>
 
-  <h2>QR‑код с содержимым ICS</h2>
+  <h2>QR‑код с содержимым ICS</h2>
   <img class="qr-big"
        src="data:image/png;base64,{{ qr_b64_ics }}"
        alt="QR с ICS‑текстом">
 
   <h2>QR‑код со ссылкой на файл</h2>
-  <img src="data:image/png;base64,{{ qr_b64_link }}"
+  <img class="qr-small"
+       src="data:image/png;base64,{{ qr_b64_link }}"
        alt="QR со ссылкой на ICS">
 
-  <p><a href="{{ ics_url }}" download>Скачать ICS‑файл</a></p>
+  <a class="download" href="{{ ics_url }}" download>Скачать ICS‑файл</a>
 </body>
 </html>
