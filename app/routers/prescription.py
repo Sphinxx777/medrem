@@ -60,13 +60,19 @@ async def upload(
     # ------------------------------------------------------------------ #
     ics_path: Path = ics_service.save(ics_text)
     ics_url = f"{settings.app_base_url.rstrip('/')}/static/ics/{ics_path.name}"
-    qr_png_b64: str = qr_service.generate_base64_png(ics_url)
+
+    # QR‑код 1: полный текст ICS
+    qr_b64_ics_text: str = qr_service.generate_base64_png(ics_text)
+
+    # QR‑код 2: ссылка на файл ICS
+    qr_b64_link: str = qr_service.generate_base64_png(ics_url)
 
     return templates.TemplateResponse(
         "result.html",
         {
             "request": request,
             "ics_url": ics_url,
-            "qr_b64": qr_png_b64,
+            "qr_b64_ics": qr_b64_ics_text,
+            "qr_b64_link": qr_b64_link,
         },
     )

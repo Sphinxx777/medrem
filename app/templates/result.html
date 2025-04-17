@@ -1,17 +1,26 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>MedRem | QR‑код для календаря</title>
+  <meta charset="utf-8">
+  <title>MedRem — результат</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;text-align:center;margin-top:2rem}
-    img{width:260px;height:260px}
-    a{display:block;margin-top:1.5rem;color:#2c7be5;text-decoration:none}
+    body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.4; }
+    img       { max-width: 320px; height: auto; }
+    .qr-big   { max-width: 640px; }     /* ‑‑ новый класс для большого QR */
   </style>
 </head>
 <body>
-  <h2>Отсканируйте QR‑код</h2>
-  <img src="data:image/png;base64,{{ qr_b64 }}" alt="QR code">
-  <a href="{{ ics_url }}" target="_blank" rel="noopener">Скачать ICS файл</a>
+  <h1>Готово 🎉</h1>
+
+  <h2>QR‑код с содержимым ICS</h2>
+  <img class="qr-big"
+       src="data:image/png;base64,{{ qr_b64_ics }}"
+       alt="QR с ICS‑текстом">
+
+  <h2>QR‑код со ссылкой на файл</h2>
+  <img src="data:image/png;base64,{{ qr_b64_link }}"
+       alt="QR со ссылкой на ICS">
+
+  <p><a href="{{ ics_url }}" download>Скачать ICS‑файл</a></p>
 </body>
 </html>
